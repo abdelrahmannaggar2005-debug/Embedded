@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <style>
+    :root {
+      --bg: #0a0c12;
+      --card: #12151f;
+      --border: #1f2535;
+      --accent: #00d97e;
+      --text: #e8ecf8;
+      --text2: #8a92b0;
+      --red: #ff2d55;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .home-screen {
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 90px;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      padding: 18px 20px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .menu-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .notification {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .notification .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--red);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Header */
+    .header {
+      padding: 0 20px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .greeting {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    .dashboard-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .weather {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Floor Plan */
+    .floor-section {
+      padding: 0 20px 24px;
+    }
+
+    .floor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .floor-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .alert-badge {
+      background: var(--red);
+      color: white;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+
+    .floor-plan {
+      background: #0f121a;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      position: relative;
+      height: 380px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tap-hint {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.75);
+      color: #b0b8d0;
+      font-size: 13px;
+      padding: 8px 22px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+
+    /* Rooms Row */
+    .rooms-row {
+      display: flex;
+      gap: 12px;
+      padding: 0 20px 30px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .room-chip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 12px 18px;
+      white-space: nowrap;
+      font-size: 14.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .room-chip:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 25px rgba(0, 217, 126, 0.2);
+    }
+
+    .room-chip.alert {
+      border-color: var(--red);
+      color: #ff8a9e;
+      animation: alertPulse 2s infinite;
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { border-color: var(--red); }
+      50% { border-color: #ff6b8a; }
+    }
+
+    /* Mini Stats */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      padding: 0 20px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border-radius: 22px;
+      padding: 20px 18px;
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+
+    .stat-value {
+      font-size: 29px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 13.5px;
+      color: var(--text2);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="home-screen">
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="menu-btn">
+      <i class="fas fa-bars"></i>
+    </div>
+    <div class="title">Smart Home</div>
+    <div class="notification">
+      <i class="fas fa-bell"></i>
+      <div class="badge">3</div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="greeting">Good morning, Ahmed</div>
+      <div class="dashboard-title">Dashboard</div>
+    </div>
+    <div class="weather">
+      <i class="fas fa-sun" style="color:#ffd60a; font-size:18px;"></i>
+      <span>32°C • Sunny</span>
+    </div>
+  </div>
+
+  <!-- Floor Plan -->
+  <div class="floor-section">
+    <div class="floor-header">
+      <div class="floor-title">FLOOR PLAN • 3D LIVE</div>
+      <div class="alert-badge">
+        <i class="fas fa-triangle-exclamation"></i>
+        ALERT
+      </div>
+    </div>
+
+    <div class="floor-plan">
+      <canvas id="floorCanvas" width="440" height="380"></canvas>
+      <div class="tap-hint">TAP A ROOM TO VIEW DETAILS</div>
+    </div>
+  </div>
+
+  <!-- Rooms -->
+  <div class="rooms-row">
+    <div class="room-chip" onclick="selectRoom('living')"><i class="fas fa-couch"></i> Living</div>
+    <div class="room-chip" onclick="selectRoom('bedroom')"><i class="fas fa-bed"></i> Bedroom</div>
+    <div class="room-chip" onclick="selectRoom('kitchen')"><i class="fas fa-utensils"></i> Kitchen</div>
+    <div class="room-chip alert" onclick="selectRoom('bathroom')"><i class="fas fa-shower"></i> Bathroom ⚠️</div>
+    <div class="room-chip" onclick="selectRoom('garage')"><i class="fas fa-car"></i> Garage</div>
+  </div>
+
+  <!-- Mini Stats -->
+  <div class="mini-stats">
+    <div class="stat-card" onclick="goTo('water')">
+      <div class="stat-icon" style="background:rgba(255,107,53,0.15); color:#ff6b35;">
+        <i class="fas fa-droplet"></i>
+      </div>
+      <div class="stat-value" style="color:#ff6b35">0.3</div>
+      <div class="stat-label">L/min</div>
+    </div>
+
+    <div class="stat-card" onclick="goTo('air')">
+      <div class="stat-icon" style="background:rgba(255,160,0,0.15); color:#ffa000;">
+        <i class="fas fa-wind"></i>
+      </div>
+      <div class="stat-value" style="color:#ffa000">820</div>
+      <div class="stat-label">ppm CO₂</div>
+    </div>
+
+    <div class="stat-card" onclick="goTo('safety')">
+      <div class="stat-icon" style="background:rgba(232,30,60,0.15); color:#e81e3c;">
+        <i class="fas fa-fire"></i>
+      </div>
+      <div class="stat-value" style="color:#e81e3c">78°</div>
+      <div class="stat-label">Socket</div>
+    </div>
+
+    <div class="stat-card" onclick="goTo('power')">
+      <div class="stat-icon" style="background:rgba(0,217,126,0.15); color:#00d97e;">
+        <i class="fas fa-bolt"></i>
+      </div>
+      <div class="stat-value" style="color:#00d97e">3.2</div>
+      <div class="stat-label">kW</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// 2D Professional Floor Plan
+const canvas = document.getElementById('floorCanvas');
+const ctx = canvas.getContext('2d');
+let t = 0;
+
+const rooms = [
+  { id: 'living',   name: 'Living',   x: 35, y: 45,  w: 155, h: 125, color: '#00d97e' },
+  { id: 'bedroom',  name: 'Bedroom',  x: 210, y: 45,  w: 185, h: 125, color: '#38a8ff' },
+  { id: 'kitchen',  name: 'Kitchen',  x: 35, y: 195, w: 125, h: 135, color: '#ff8a00' },
+  { id: 'bathroom', name: 'Bathroom', x: 175, y: 195, w: 105, h: 135, color: '#ff2d55', alert: true },
+  { id: 'garage',   name: 'Garage',   x: 295, y: 195, w: 115, h: 135, color: '#bf5af2' }
+];
+
+function drawFloorPlan() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  t += 0.035;
+
+  // Background
+  ctx.fillStyle = '#0a0e17';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Outer walls
+  ctx.strokeStyle = '#1f2535';
+  ctx.lineWidth = 16;
+  ctx.strokeRect(22, 32, canvas.width - 44, canvas.height - 68);
+
+  rooms.forEach(room => {
+    // Room fill + border
+    ctx.save();
+    ctx.fillStyle = room.alert ? 
+      `rgba(255,45,85,${0.22 + 0.08 * Math.sin(t*5)})` : 
+      room.color + '22';
+    
+    ctx.strokeStyle = room.alert ? '#ff2d55' : room.color;
+    ctx.lineWidth = room.alert ? 5 : 3;
+
+    ctx.beginPath();
+    ctx.roundRect(room.x, room.y, room.w, room.h, 20);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // Simple furniture
+    ctx.fillStyle = 'rgba(255,255,255,0.09)';
+    if (room.id === 'living') {
+      ctx.fillRect(room.x + 25, room.y + 40, 85, 35);   // sofa
+      ctx.fillRect(room.x + 115, room.y + 25, 30, 25);  // tv
+    } else if (room.id === 'bedroom') {
+      ctx.fillRect(room.x + 35, room.y + 35, 115, 55);  // bed
+    } else if (room.id === 'kitchen') {
+      ctx.fillRect(room.x + 20, room.y + 30, 80, 28);   // counter
+    } else if (room.id === 'bathroom') {
+      ctx.fillRect(room.x + 22, room.y + 35, 65, 50);   // bathtub
+    }
+
+    // Room name
+    ctx.font = '700 15px Segoe UI, sans-serif';
+    ctx.fillStyle = room.alert ? '#ff99a8' : '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(room.name.toUpperCase(), room.x + room.w/2, room.y + 26);
+
+    // Alert icon
+    if (room.alert) {
+      ctx.font = 'bold 22px Arial';
+      ctx.fillStyle = '#ff2d55';
+      ctx.fillText('⚠️', room.x + room.w - 34, room.y + 34);
+    }
+
+    // Sensor light
+    ctx.save();
+    ctx.globalAlpha = 0.65 + 0.35 * Math.sin(t * 3.5);
+    ctx.fillStyle = room.color;
+    ctx.beginPath();
+    ctx.arc(room.x + room.w/2, room.y + room.h - 28, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function animate() {
+  drawFloorPlan();
+  requestAnimationFrame(animate);
+}
+
+function selectRoom(room) {
+  alert(`Opened ${room.charAt(0).toUpperCase() + room.slice(1)} Room Details`);
+}
+
+function goTo(section) {
+  alert(`Navigating to ${section} section`);
+}
+
+// Start Animation
+animate();
+</script>
+
+</body>
+</html>
